@@ -4,11 +4,13 @@ LDLIBS = -lm
 CFLAGS = -O2 -std=c++11 -Wall
 CXXFLAGS = -O2 -std=c++11 -Wall
 
-exe = name_of_exo
+#SRCS = $(wildcard *.cpp)
+#OBJS = (SRCS:.cpp=.o)
+exe = mice_and_maze
 
 all: $(exe)
 
-$(exe): name_of_exo.cpp
+$(exe): $(exe).cpp
 
 run: $(exe)
 	./$< < input.txt
