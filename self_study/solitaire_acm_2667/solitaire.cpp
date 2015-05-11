@@ -31,7 +31,7 @@ const int dy[4] = {0, 1, 0, -1};
 //So we have: XXX000 + YYY = XXX << 3 + YYY
 //keep continue, we end up with 24 bits to present all states
 //can consider a value of a state is the nb of moves done so far
-char states[1 << 24];
+char states[(1 << 24) + 3];
 
 //find the current state of the curr configuration
 int find_IdState()
@@ -93,6 +93,17 @@ int find_NbWrongPos()
 
 void search(int nbMove_done)
 {
+  if(nbMove_done == 8 && nbWrongPos != 0)
+    return;
+  
+  if(nbWrongPos == 0)
+    {
+      throw 0;
+    }
+  
+  if(nbWrongPos != find_NbWrongPos())
+    cout << "sth wrong with nbWrongPos\n";
+
   int idState = find_IdState();
 
   if(states[idState] <= nbMove_done)//already reached this state before 
@@ -100,10 +111,6 @@ void search(int nbMove_done)
 
   states[idState] = nbMove_done;
   
-  if(nbWrongPos == 0)
-    {
-      throw 0;
-    }
 
   REP(i, 4) REP(j, 4)
     {
@@ -127,7 +134,7 @@ void search(int nbMove_done)
       //if this moved position is a destination position
       if(dest[x_next][y_next]) --nbWrongPos;
       
-      if(nbWrongPos + nbMove_done <= 7)// 7 = 8 - 1, cause the nbWrongPos is already calculated for the next move (i.e. for nbMove_done + 1)
+	if(nbWrongPos + nbMove_done <= 8)// 7 = 8 - 1, cause the nbWrongPos is already calculated for the next move (i.e. for nbMove_done + 1)
 	{
 	  //change configuration
 	  curr[x][y] = false; curr[x_next][y_next] = true;
@@ -153,7 +160,7 @@ int main()
   nbWrongPos = find_NbWrongPos();
   //TRACE(nbWrongPos);
   //init states
-  REP(i, 1 << 24) states[i] = 10; 
+  REP(i, ((1 << 24) + 3) ) states[i] = 8; 
   
   try
     {

@@ -1,0 +1,7 @@
+No Change: (2eme solution): rewrite the problem by summing the value of coins: take vi i.e. take v1 + ... vi
+
+Morse Match (2eme sol): using TRIE
+
+gdb -tui ./exe
+
+
