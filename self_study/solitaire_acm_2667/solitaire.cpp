@@ -6,6 +6,8 @@ using namespace std;
 
 #define TRACE(x) if(debug) cout << #x << " = " << x << endl;
 
+//#define TRACE(debug, x) if(debug) cout << #x << " = " << x << endl;
+
 bool debug = true;
 
 //done shortcut
@@ -31,7 +33,7 @@ const int dy[4] = {0, 1, 0, -1};
 //So we have: XXX000 + YYY = XXX << 3 + YYY
 //keep continue, we end up with 24 bits to present all states
 //can consider a value of a state is the nb of moves done so far
-char states[(1 << 24) + 3];
+char states[(1 << 24)];
 
 //find the current state of the curr configuration
 int find_IdState()
@@ -39,16 +41,22 @@ int find_IdState()
   int res = 0;
   REP(i, 4)
     res = ( ((res << 3) + xx[i]) << 3) + yy[i];
+  //  cout << res << endl;
   return res;
 }
 
 //check if x and y lies in [0,7] or not
 bool inBounds(int x, int y)
 {
-  return ( ( (x | y) & (~7) ) == 0);
+  //return ( ( (x | y) & (~7) ) == 0);
+
+  return ( (x >= 0) && (x < 8) &&  (y >= 0) && (y < 8) ); //other way to test
 }
 
-void readInput()
+
+
+
+bool readInput()
 {
   REP(i, 8) REP(j, 8) curr[i][j] = dest[i][j] = false;
   
@@ -59,10 +67,14 @@ void readInput()
       checkRead = scanf("%d %d", &x, &y); //col <-> x, row <-> y
       --x;//idx = nb - 1
       --y;
-      
-      curr[x][y] = true;
-      xx[i] = x;
-      yy[i] = y;
+      if(x < 0  || x > 7 || y < 0 || y > 7 || curr[x][y]) //check the correctness of input
+	return false;
+      else
+	{
+	  curr[x][y] = true;
+	  xx[i] = x;
+	  yy[i] = y;
+	}
       if(checkRead != 2 && debug)
 	cout << "sth wrong in readInput\n";
     }
@@ -73,11 +85,17 @@ void readInput()
       checkRead = scanf("%d %d", &x, &y); 
       --x;
       --y;
-
-      dest[x][y] = true;
+      
+      if(x < 0  || x > 7 || y < 0 || y > 7)//check the correctness of input
+	return false;
+      else
+	{
+	  dest[x][y] = true;
+	}
       if(checkRead != 2 && debug)
 	cout << "sth wrong in readInput\n";
     }
+  return true;
 }
 
 //return nb of wrong position between current configuration and the destination config
@@ -90,7 +108,7 @@ int find_NbWrongPos()
   return res;
 }
 
-
+int k = 0;
 void search(int nbMove_done)
 {
   if(nbMove_done == 8 && nbWrongPos != 0)
@@ -105,10 +123,15 @@ void search(int nbMove_done)
     cout << "sth wrong with nbWrongPos\n";
 
   int idState = find_IdState();
+  //  while(k++ < 100) {cout << (int) states[idState] << endl; }
+  if(states[idState] < nbMove_done)//already reached this state before 
+    {
+      //      cout << (int) states[idState] << " " << nbMove_done << endl;
+      return;
 
-  if(states[idState] <= nbMove_done)//already reached this state before 
-    return;
+    }
 
+  
   states[idState] = nbMove_done;
   
 
@@ -134,7 +157,7 @@ void search(int nbMove_done)
       //if this moved position is a destination position
       if(dest[x_next][y_next]) --nbWrongPos;
       
-	if(nbWrongPos + nbMove_done <= 8)// 7 = 8 - 1, cause the nbWrongPos is already calculated for the next move (i.e. for nbMove_done + 1)
+	if(nbWrongPos + nbMove_done <= 7)// 7 = 8 - 1, cause the nbWrongPos is already calculated for the next move (i.e. for nbMove_done + 1)
 	{
 	  //change configuration
 	  curr[x][y] = false; curr[x_next][y_next] = true;
@@ -155,20 +178,27 @@ void search(int nbMove_done)
 
 int main()
 {
-  readInput();
+  if(readInput())
+    {
+      nbWrongPos = find_NbWrongPos();
+      //TRACE(nbWrongPos);
+      //init states
+      REP(i, (1 << 24) ) states[i] = 10; 
+      //REP(i, (1 << 24) ) if(states[i] != 9) {cout << "wrong char states array" << endl; break;} 
+      
+      try
+	{
+	  search(0); //nb moves done from start is definitely 0
+	  printf("NO\n");
+	}
+      catch(int)
+	{
+	  printf("YES\n");
+	}      
+    }
+  else
+    printf("NO\n");
 
-  nbWrongPos = find_NbWrongPos();
-  //TRACE(nbWrongPos);
-  //init states
-  REP(i, ((1 << 24) + 3) ) states[i] = 8; 
-  
-  try
-    {
-      search(0); //nb moves done from start is definitely 0
-      printf("NO\n");
-    }
-  catch(int)
-    {
-      printf("YES\n");
-    }
+  return 0;
+
 }

@@ -15,6 +15,8 @@ $(exe): $(exe).cpp
 run: $(exe)
 	./$< < input.txt
 
+out: $(exe)
+	./$< < input.txt > output.txt
 .PHONY: clean
 
 clean:
