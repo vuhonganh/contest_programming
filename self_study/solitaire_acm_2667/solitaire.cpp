@@ -8,7 +8,7 @@ using namespace std;
 
 //#define TRACE(debug, x) if(debug) cout << #x << " = " << x << endl;
 
-bool debug = true;
+bool debug = false;
 
 //done shortcut
 ////////////////
@@ -56,26 +56,34 @@ bool inBounds(int x, int y)
 
 
 
-bool readInput()
+//return 1: readInput OK
+//return 0: bad Input
+//return -1: end of tests
+int readInput()
 {
   REP(i, 8) REP(j, 8) curr[i][j] = dest[i][j] = false;
-  
+
   int checkRead;
   REP(i, 4)
     {
       int x, y;
-      checkRead = scanf("%d %d", &x, &y); //col <-> x, row <-> y
+      checkRead = scanf("%d", &x); //col <-> x, row <-> y
+      
+      if(checkRead == EOF)//end of tests 
+	return -1;
+
+      checkRead = scanf("%d", &y);
       --x;//idx = nb - 1
       --y;
       if(x < 0  || x > 7 || y < 0 || y > 7 || curr[x][y]) //check the correctness of input
-	return false;
+	return 0    ;
       else
 	{
 	  curr[x][y] = true;
 	  xx[i] = x;
 	  yy[i] = y;
 	}
-      if(checkRead != 2 && debug)
+      if(checkRead != 1 && debug)
 	cout << "sth wrong in readInput\n";
     }
 
@@ -87,7 +95,7 @@ bool readInput()
       --y;
       
       if(x < 0  || x > 7 || y < 0 || y > 7)//check the correctness of input
-	return false;
+	return 0;
       else
 	{
 	  dest[x][y] = true;
@@ -95,7 +103,7 @@ bool readInput()
       if(checkRead != 2 && debug)
 	cout << "sth wrong in readInput\n";
     }
-  return true;
+  return 1;
 }
 
 //return nb of wrong position between current configuration and the destination config
@@ -178,27 +186,32 @@ void search(int nbMove_done)
 
 int main()
 {
-  if(readInput())
+  while(true)
     {
-      nbWrongPos = find_NbWrongPos();
-      //TRACE(nbWrongPos);
-      //init states
-      REP(i, (1 << 24) ) states[i] = 10; 
-      //REP(i, (1 << 24) ) if(states[i] != 9) {cout << "wrong char states array" << endl; break;} 
-      
-      try
+      if(readInput() == 1)
 	{
-	  search(0); //nb moves done from start is definitely 0
-	  printf("NO\n");
+	  nbWrongPos = find_NbWrongPos();
+	  //TRACE(nbWrongPos);
+	  //init states
+	  REP(i, (1 << 24) ) states[i] = 10; 
+	  //REP(i, (1 << 24) ) if(states[i] != 9) {cout << "wrong char states array" << endl; break;} 
+	  
+	  try
+	    {
+	      search(0); //nb moves done from start is definitely 0
+	      printf("NO\n");
+	    }
+	  catch(int)
+	    {
+	      printf("YES\n");
+	    }     
 	}
-      catch(int)
-	{
-	  printf("YES\n");
-	}      
+      else if(readInput() == 0) 
+	printf("NO\n");
+      else
+	break;
     }
-  else
-    printf("NO\n");
-
+ 
   return 0;
 
 }
