@@ -1,3 +1,8 @@
+//main idea: find the first occurrence of the input date
+//find the period of a round year (least common multiple)
+//convert to long count
+
+
 #include <iostream>
 #include <algorithm>
 #include <string.h>

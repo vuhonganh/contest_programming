@@ -1,3 +1,7 @@
+//MAIN IDEA: first check if OVERFLOW or not
+//if not OVERFLOW, recherche dichotomie: calculate [left, right] the interval contains the result, repeat a number of times untill it converges to (nearly) 1 point
+
+
 #include <iostream>
 #include <algorithm>
 using namespace std;
@@ -24,7 +28,7 @@ double w[MAX_SZ]; //width
 double d[MAX_SZ]; //depth
 
 
-void find_level(int n, double V) //n = nb of cistern
+void find_level(int n, double V) //n = nb of cistern, V = volume want to store
 {
   
   double sumV = 0.0;

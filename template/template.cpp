@@ -9,6 +9,8 @@ using namespace std;
 
 #define REP(i, n) for(int i = 0; i < (n); ++i)
 
+#define FOR(i, a, b) for(int i = (a), i < (b); ++i)
+
 #define VAR(v, x) __typeof(x) v = x
 
 #define FOREACH(i, c) for(VAR(i, (c).begin()); i != (c).end(); ++i)

@@ -1,4 +1,5 @@
-//KEY: topological sorting
+//KEY: topological sorting (implements algo in wikipedia: http://en.wikipedia.org/wiki/Topological_sorting )
+//just takes into account of using a priority queue to have the order asked
 
 #include <iostream>
 #include <cstdio>

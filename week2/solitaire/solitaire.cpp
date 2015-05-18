@@ -1,3 +1,6 @@
+//MAIN IDEA: assign each configuration of a chessboard to a state, then use recursive to search while taking into accounts of avoiding go into a state that went to before (during 8 moves)
+//ANOTHER IDEA: to implement: check 4 states from the first configuration, check 4 states from the second configuration. If they have intersections, then YES, otherwise NO
+
 #include <iostream>
 
 using namespace std;

@@ -1,3 +1,6 @@
+//IDEA: just a all source single destination shortest paths
+//use floyd warshall to compute all source all destination shortest paths (for its simplicity)
+
 #include <iostream>
 #include <cstdio>
 
