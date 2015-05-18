@@ -20,4 +20,4 @@ out: $(exe)
 .PHONY: clean
 
 clean:
-	rm -rf $(exe)
+	rm -rf $(exe) output

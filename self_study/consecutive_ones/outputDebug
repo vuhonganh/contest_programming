@@ -1,0 +1,53 @@
+0 1 1 0 
+0 0 0 1 
+1 1 0 1 
+
+set col 1 of input to col 1 in output // 0 1
+0 1 -1 -1 
+0 0 -1 -1 
+1 1 -1 -1 
+
+set col 2 of input to col 2 in output // 0 1 2
+0 1 1 -1 
+0 0 0 -1 
+1 1 0 -1 
+
+can not set col 3 of input to col 3 in output
+set col 3 of input to col 2 in output // 0 1 3
+0 1 0 -1 
+0 0 1 -1 
+1 1 1 -1 
+
+can not set col 2 of input to col 3 in output 
+set col 2 of input to col 1 in output //0 2 
+0 1 0 -1 
+0 0 1 -1 
+1 0 1 -1 
+
+can not set col 1 of input to col 2 in output //0 2 1 (NO)
+can not set col 3 of input to col 2 in output //0 2 3 (NO)
+set col 3 of input to col 1 in output //0 3 
+0 0 0 -1 
+0 1 1 -1 
+1 1 1 -1 
+
+set col 1 of input to col 2 in output // 0 3 1
+0 0 1 -1 
+0 1 0 -1 
+1 1 1 -1 
+
+set col 2 of input to col 3 in output // 0 3 1 2
+0 0 1 1 
+0 1 0 0 
+1 1 1 0 
+
+set col 2 of input to col 2 in output
+0 0 1 1 
+0 1 0 0 
+1 1 0 0 
+
+can not set col 1 of input to col 3 in output
+0 0 1 1 
+0 1 0 0 
+1 1 0 0 
+
