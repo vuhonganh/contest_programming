@@ -22,7 +22,7 @@ typedef pair<int, int> ii;
 typedef vector<int> vi;
 typedef vector<ii> vii;
 
-bool debug = false;
+bool debug = true;
 int checkRead;
 //done shortcut
 ////////////////
@@ -67,6 +67,19 @@ ii intvTime[SZ_AR][SZ_AR];//pair (time_min_to_come, time_max_to_leave)
 int N;
 char s[SZ_AR];
 
+const int dx[4] = {1, 0, -1, 0};
+const int dy[4] = {0, 1, 0, -1};
+
+void printCell(ii cell)
+{
+  printf("(%d, %d)\n", cell.first, cell.second);
+}
+
+void printTime(ii cell)
+{
+  printf("cell (%d, %d) has time min = %d, time max = %d\n", cell.first, cell.second, intvTime[cell.first][cell.second].first, intvTime[cell.first][cell.second].second);
+}
+
 bool readIn()
 {
   checkRead = scanf("%d", &N); if(checkRead == EOF) return false;
@@ -91,16 +104,27 @@ bool readIn()
 
 //given an interval of time (from a source cell) and a destination cell, update the interval of time for this cell
 //return false if can not reach
-bool goToCell(ii srcCell, ii dstCell)
+bool goToCell(const ii &srcCell, const ii &dstCell)
 {
+  
+  //base case 1: road always closed
   if(!roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
     return false;
-  
-  int tMinNew;
-  int tMaxNew;
 
   int tMin = intvTime[srcCell.first][srcCell.second].first + 1;
   int tMax = intvTime[srcCell.first][srcCell.second].second + 1;
+
+  //base case 2: road always opened
+  if(roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
+    {
+     
+      intvTime[dstCell.first][dstCell.second] = ii(tMin, tMax);
+      return true;
+    }
+
+    //normal case
+  int tMinNew;
+  int tMaxNew;
   
   int k = tMin/roadTime[dstCell.first][dstCell.second];
   
@@ -120,7 +144,8 @@ bool goToCell(ii srcCell, ii dstCell)
 	{
 	  tMinNew = (k+1)*roadTime[dstCell.first][dstCell.second];
 	  tMaxNew = min( (k+2)*roadTime[dstCell.first][dstCell.second], tMax);
-	  return true;
+	  intvTime[dstCell.first][dstCell.second] = ii(tMinNew, tMaxNew);
+     	  return true;
 	}
     }
 }
@@ -130,7 +155,8 @@ void print()
   REP(i, N)
     {
       REP(j, N)
-	printf("%d ", roadOpen[i][j]);
+	if(roadOpen[i][j]) printf(". ");
+	else printf("* ");
 
       printf("\n");
     }
@@ -144,18 +170,125 @@ REP(i, N)
     }
 }
 
-int main()
+bool neighborCell(const ii &srcCell, int dx, int dy, ii &dstCell)
 {
-  /*
-  ii startPoint(0, 0);
-  queue<ii> Q;
-  Q.push(startPoint);
-  */
-  readIn();
-  print();
-  return 0;
+  int x = srcCell.first + dx;
+  int y = srcCell.second + dy;
+  if( (0 <= x) && (x < N) && (0 <= y) && (y < N) ) 
+    {
+      dstCell.first  = x;
+      dstCell.second = y;
+      return true;
+    }
+  return false;
 }
 
+
+void BFS()
+{
+  if((!roadOpen[N-1][N-1] && roadTime[N-1][N-1] == 0))
+    {
+      printf("NO\n");
+      return;
+    }
+  
+  //init the end point
+  intvTime[N-1][N-1] = ii(-1, -1);
+
+  queue<ii> Q;
+  //init the start point
+  ii srcCell(0,0);
+  if(roadOpen[0][0])
+    {
+      if(roadTime[0][0] == 0)
+	intvTime[srcCell.first][srcCell.second] = ii(0, INF);
+      else
+	intvTime[srcCell.first][srcCell.second] = ii(0, roadTime[0][0]);
+    }
+  else
+    intvTime[srcCell.first][srcCell.second] = ii(0, 1);
+  
+  int count = 0;
+
+  Q.push(srcCell);
+  while(!Q.empty())
+    {
+      if(count++ == 1000000)
+	{
+	  printf("over %d times", count);
+	  break;
+	} 
+
+      ii cur = Q.front(); Q.pop();
+      //cout << "current cell is "; printCell(cur); printTime(cur);
+      REP(i, 4)
+	{
+	  ii dstCell;
+	  if(neighborCell(cur, dx[i], dy[i], dstCell))
+	    {
+	      //cout << "one of neighbor cells is "; printCell(dstCell);
+	      if(goToCell(cur, dstCell))
+		{
+		  Q.push(dstCell);
+	   	  //cout << "Can goToCell so add this neighbor cell to queue: "; printCell(dstCell); printTime(dstCell);		  
+		}
+	      else
+		{
+		  //cout << "can not goToCell "; printCell(dstCell);
+		}
+	    }
+	}
+    }
+   
+  if(intvTime[N-1][N-1].first == -1)
+    printf("NO\n");
+  else
+    printf("%d\n", intvTime[N-1][N-1].first);  
+}
+
+void testQueue()
+{
+  ii srcCell(0,0);
+  queue <ii> Q;
+  REP(j, 4)
+    {
+      ii dstCell;
+      if(neighborCell(srcCell, dx[j], dy[j], dstCell))
+	{
+	  printf("(%d, %d)\n", dstCell.first, dstCell.second);
+	  Q.push(dstCell);
+	}
+    }
+  
+  while(!Q.empty())
+    {
+      ii elem = Q.front(); Q.pop();
+      printf("(%d, %d)\n", elem.first, elem.second);     
+    }
+}
+
+
+int main()
+{
+  if(readIn())
+    {
+      print();
+      BFS();
+    }
+  
+  
+  while(readIn())
+    {      
+      printf("\n");
+      BFS();
+    }
+  //  readIn();
+  //print();
+
+  
+  
+  return 0;
+}
 
 
 
