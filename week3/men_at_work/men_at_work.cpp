@@ -5,6 +5,9 @@
 #include <string>
 #include <cassert>
 #include <stack>
+#include <time.h>
+#include <stdlib.h>
+
 using namespace std;
 
 #define REP(i, n) for(int i = 0; i < (n); ++i)
@@ -17,304 +20,230 @@ using namespace std;
 
 #define TRACE(x) if(debug) cout << #x << " = " << x << endl;
 
-#define INF 1000000000 
+#define INF 1000000000
 typedef pair<int, int> ii;
 typedef vector<int> vi;
 typedef vector<ii> vii;
 
 bool debug = true;
 int checkRead;
-//done shortcut
-////////////////
-/*
-class state
-{
-  
-public:
-  int row;
-  int col;
-  int time;
-  
-  state(int r, int c);
-  state(int r, int c, int t);
-}; 
+//DONE SHORTCUT///
+//////////////////
 
-
-  state::state(int r, int c)
-  {
-    row = r;
-    col = c;
-    time = -1;
-  }
-
-state::state(int r, int c, int t)
-  {
-    row = r;
-    col = c;
-    time = t;
-  }
-*/
-
-//cach 2: moi state xac dinh boi mot pair ii (x, y), giu mot Ar 2D ii de update thoi gian (tMin, tMax). Nhet pair vao Queue va lam binh thuong
 
 #define SZ_AR 50
 
 bool roadOpen[SZ_AR][SZ_AR];
 int roadTime[SZ_AR][SZ_AR];
-int revisited[SZ_AR][SZ_AR];
-
-ii intvTime[SZ_AR][SZ_AR];//pair (time_min_to_come, time_max_to_leave)
+bool reachAtT[SZ_AR][SZ_AR];//true if this cell is reachable at current time T, false if not
+bool discovered[SZ_AR][SZ_AR];
+int nbDiscovered;
+queue <ii> cellsChangesStates;
 
 int N;
 char s[SZ_AR];
 
-const int dx[4] = {-1, 0, 1, 0};
-const int dy[4] = {0, -1, 0, 1};
+const int dx[5] = {-1, 0, 1, 0, 0};
+const int dy[5] = {0, -1, 0, 1, 0};
 
-void printCell(ii cell)
+bool inBounds(int x, int y)
 {
-  printf("cell (%d, %d), visited %d times\n", cell.first, cell.second, revisited[cell.first][cell.second]);
+
+    return ( (0 <= x) && (x < N) && (0 <= y) && (y < N) );
 }
 
-void printTime(ii cell)
+int atTimeT(int t) //return nb of new cell discovered at time = t
 {
-  printf("cell (%d, %d) has time min = %d, time max = %d\n", cell.first, cell.second, intvTime[cell.first][cell.second].first, intvTime[cell.first][cell.second].second);
+    //at t = 0, the man is already at cell (0, 0) so we consider t >= 1
+    if(t == 0)
+        cout << "t = 0 considered at function atTimeT" << endl;
+
+    int oldNbDiscovered = nbDiscovered;
+    //update roadOpen at this time t
+    REP(i, N)
+    {
+        REP(j, N)
+        {
+            if(roadTime[i][j] != 0) //if it can change
+            {
+                if(t % roadTime[i][j] == 0)//change period
+                    roadOpen[i][j] = !roadOpen[i][j];
+
+            }
+        }
+    }
+
+    //make sure the queue empty before doing task
+    if(!cellsChangesStates.empty()) printf("error at queue cells changes states"); //this queue needs to be empty after each loop
+
+    //find cells that we can reach at t (suppose t >= 1), t = 0 we always start at (0,0)
+    REP(i, N)
+    {
+        REP(j, N)
+        {
+            if(reachAtT[i][j])//in fact this reachAtT is for time = t-1, we are updating for time = t
+            {
+                REP(k, 5)
+                {
+                    //consider cell (x,y)
+                    int x = i + dx[k];
+                    int y = j + dy[k];
+
+                    if(inBounds(x, y) && roadOpen[x][y])
+                    {
+                        cellsChangesStates.push( ii(x, y) );
+                        //check if discovered a new cell or not
+                        if(discovered[x][y] == false)
+                        {
+                            discovered[x][y] = true;
+                            nbDiscovered++;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    //update reachAtT for time = t
+    //clean previous state time = t-1
+    REP(i, N) REP(j, N) reachAtT[i][j] = false;
+    //update this state time = t
+    while(!cellsChangesStates.empty())
+    {
+        ii cur = cellsChangesStates.front(); cellsChangesStates.pop();
+        reachAtT[cur.first][cur.second] = true;
+    }
+    return nbDiscovered - oldNbDiscovered;
 }
 
+bool existStates()
+{
+    REP(i, N) REP(j, N) if(reachAtT[i][j]) return true;
+    return false;
+}
+
+const int maxNoNew = 6000;
+
+void compute()
+{
+    int t = 1;
+    int countNoNew = 0;
+    while(true)
+    {
+        int newDiscover = atTimeT(t);
+
+        if(newDiscover == 0)
+            countNoNew++;
+        else
+            countNoNew = 0;
+
+        if(!existStates())
+        {
+            printf("NO\n");
+            return;
+        }
+
+        if(countNoNew == maxNoNew)
+        {
+            printf("NO\n");
+            return;
+        }
+
+        if(reachAtT[N-1][N-1])
+        {
+            printf("%d\n", t);
+            return;
+        }
+
+        t++;
+    }
+}
+
+//read input
 bool readIn()
 {
-  checkRead = scanf("%d", &N); if(checkRead == EOF) return false;
-  
-  REP(i, N)
+    checkRead = scanf("%d", &N); if(checkRead == EOF) return false;
+
+    REP(i, N)
     {
-      checkRead = scanf("%s", s);
-      REP(j, N)
-	{
-	  roadOpen[i][j] = (s[j] == '.')? true : false;	  
-	}      
-    }
-  
-  REP(i, N)
-    {
-      REP(j, N)
-	checkRead = scanf("%1d", &roadTime[i][j]); 
+        checkRead = scanf("%s", s);
+
+        REP(j, N)
+        {
+            roadOpen[i][j] = (s[j] == '.')? true : false;
+        }
     }
 
-  //init revisited 
-  REP(i, N)
+    REP(i, N)
     {
-      REP(j,N)
-	revisited[i][j] = 0;
+        REP(j, N)
+                checkRead = scanf("%1d", &roadTime[i][j]);
     }
-  
-  return true;
+
+    //init reachAtT
+    REP(i, N)
+    {
+        REP(j,N)
+                reachAtT[i][j] = false;
+    }
+    reachAtT[0][0]   = true;  //at time 0
+    discovered[0][0] = true;  //at time 0
+    nbDiscovered = 1; //cell (0,0)
+    return true;
 }
 
-//given an interval of time (from a source cell) and a destination cell, update the interval of time for this cell
-//return false if can not reach
-bool goToCell(const ii &srcCell, const ii &dstCell)
+void doTask()
 {
+    if(readIn())
+      {
+        compute();
+      }
 
-  if(revisited[dstCell.first][dstCell.second] == 6000)
-    return false;
-  
-  //base case 1: road always closed
-  if(!roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
-    return false;
+    while(readIn())
+      {
+        printf("\n");
+        compute();
+      }
 
-  int tMin = intvTime[srcCell.first][srcCell.second].first + 1;
-  int tMax = intvTime[srcCell.first][srcCell.second].second + 1;
-
-  //base case 2: road always opened
-  if(roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
-    {      
-      intvTime[dstCell.first][dstCell.second] = ii(tMin, tMax);
-      return true;
-    }
-
-    //normal case
-  int tMinNew;
-  int tMaxNew;
-  
-  int k = tMin/roadTime[dstCell.first][dstCell.second];
-  
-  if( (k%2 == 0 && roadOpen[dstCell.first][dstCell.second]) || (k%2 == 1 && !roadOpen[dstCell.first][dstCell.second]) )
-    {
-      tMinNew = tMin;
-      tMaxNew = min( (k+1)*roadTime[dstCell.first][dstCell.second], tMax );
-      
-      intvTime[dstCell.first][dstCell.second] = ii(tMinNew, tMaxNew);
-      return true;      
-    }
-  else
-    {
-      if( (k+1)*roadTime[dstCell.first][dstCell.second] >= tMax)
-	return false;
-      else
-	{
-	  tMinNew = (k+1)*roadTime[dstCell.first][dstCell.second];
-	  tMaxNew = min( (k+2)*roadTime[dstCell.first][dstCell.second], tMax);
-	  intvTime[dstCell.first][dstCell.second] = ii(tMinNew, tMaxNew);
-     	  return true;
-	}
-    }
 }
 
-void print()
+void genRandIn()
 {
-  REP(i, N)
-    {
-      REP(j, N)
-	if(roadOpen[i][j]) printf(". ");
-	else printf("* ");
+    srand (time(NULL));
 
-      printf("\n");
+    int size = rand()%50 + 1;
+
+    printf("%d\n", size);
+    REP(i, size)
+    {
+        REP(j, size)
+        {
+            int c = rand()%2;
+            if(c) printf(".");
+            else printf("*");
+        }
+        printf("\n");
     }
 
-REP(i, N)
+    REP(i, size)
     {
-      REP(j, N)
-	printf("%d ", roadTime[i][j]);
-
-      printf("\n");
+        REP(j, size)
+        {
+            int num = rand()%10;
+            printf("%d", num);
+        }
+        printf("\n");
     }
+
+
 }
-
-bool neighborCell(const ii &srcCell, int dx, int dy, ii &dstCell)
-{
-  int x = srcCell.first + dx;
-  int y = srcCell.second + dy;
-  if( (0 <= x) && (x < N) && (0 <= y) && (y < N) ) 
-    {
-      dstCell.first  = x;
-      dstCell.second = y;
-      return true;
-    }
-  return false;
-}
-
-
-void BFS()
-{
-  if((!roadOpen[N-1][N-1] && roadTime[N-1][N-1] == 0))
-    {
-      printf("NO\n");
-      return;
-    }
-  
-  //init the end point
-  intvTime[N-1][N-1] = ii(-1, -1);
-
-  stack<ii> Q;
-  //init the start point
-  ii srcCell(0,0);
-  if(roadOpen[0][0])
-    {
-      if(roadTime[0][0] == 0)
-	intvTime[srcCell.first][srcCell.second] = ii(0, INF);
-      else
-	intvTime[srcCell.first][srcCell.second] = ii(0, roadTime[0][0]);
-    }
-  else
-    intvTime[srcCell.first][srcCell.second] = ii(0, 1);
-  
-  int count = 0;
-
-  Q.push(srcCell);
-  revisited[srcCell.first][srcCell.second]++;
-  while(!Q.empty())
-    {
-      if(count++ == 10000000)
-	{
-	  printf("over %d times", count);
-	  break;
-	} 
-
-      ii cur = Q.top(); Q.pop();
-      //cout << "current cell is "; printCell(cur); printTime(cur);
-      REP(i, 4)
-	{
-	  ii dstCell;
-	  if(neighborCell(cur, dx[i], dy[i], dstCell) && goToCell(cur, dstCell))
-	    {
-	      //cout << "one of goable neighbor cells is "; printCell(dstCell);
-	      Q.push(dstCell);
-	      revisited[dstCell.first][dstCell.second]++;
-	      //cout << "add this to stack "; printCell(dstCell); printTime(dstCell);
-	    }
-	  /*
-	  if(neighborCell(cur, dx[i], dy[i], dstCell))
-	    {
-	      cout << "one of neighbor cells is "; printCell(dstCell);
-	      if(goToCell(cur, dstCell))
-		{
-		  Q.push(dstCell);
-		  revisited[dstCell.first][dstCell.second]--;
-	   	  cout << "Can goToCell so add this neighbor cell to queue: "; printCell(dstCell); printTime(dstCell);		  
-		}
-	      else
-	      {
-		cout << "can not goToCell "; printCell(dstCell);
-		}
-		}*/
-	}
-    }
-   
-  if(intvTime[N-1][N-1].first == -1)
-    printf("NO\n");
-  else
-    printf("%d\n", intvTime[N-1][N-1].first);  
-}
-
-void testQueue()
-{
-  ii srcCell(0,0);
-  queue <ii> Q;
-  REP(j, 4)
-    {
-      ii dstCell;
-      if(neighborCell(srcCell, dx[j], dy[j], dstCell))
-	{
-	  printf("(%d, %d)\n", dstCell.first, dstCell.second);
-	  Q.push(dstCell);
-	}
-    }
-  
-  while(!Q.empty())
-    {
-      ii elem = Q.front(); Q.pop();
-      printf("(%d, %d)\n", elem.first, elem.second);     
-    }
-}
-
 
 int main()
 {
-  if(readIn())
-    {
-      print();
-      BFS();
-    }
-  
-  
-  while(readIn())
-    {      
-      printf("\n");
-      BFS();
-    }
-  //  readIn();
-  //print();
-
-  
-  
-  return 0;
+    doTask();
+    //genRandIn();
+    return 0;
 }
-
-
-
-
-  //TO DO: NEED an Array to keep track of maximum number of revisited time of a cell
-
-
 
 
