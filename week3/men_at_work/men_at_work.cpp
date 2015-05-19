@@ -4,7 +4,7 @@
 #include <queue>
 #include <string>
 #include <cassert>
-
+#include <stack>
 using namespace std;
 
 #define REP(i, n) for(int i = 0; i < (n); ++i)
@@ -61,18 +61,19 @@ state::state(int r, int c, int t)
 
 bool roadOpen[SZ_AR][SZ_AR];
 int roadTime[SZ_AR][SZ_AR];
+int revisited[SZ_AR][SZ_AR];
 
 ii intvTime[SZ_AR][SZ_AR];//pair (time_min_to_come, time_max_to_leave)
 
 int N;
 char s[SZ_AR];
 
-const int dx[4] = {1, 0, -1, 0};
-const int dy[4] = {0, 1, 0, -1};
+const int dx[4] = {-1, 0, 1, 0};
+const int dy[4] = {0, -1, 0, 1};
 
 void printCell(ii cell)
 {
-  printf("(%d, %d)\n", cell.first, cell.second);
+  printf("cell (%d, %d), visited %d times\n", cell.first, cell.second, revisited[cell.first][cell.second]);
 }
 
 void printTime(ii cell)
@@ -98,6 +99,13 @@ bool readIn()
       REP(j, N)
 	checkRead = scanf("%1d", &roadTime[i][j]); 
     }
+
+  //init revisited 
+  REP(i, N)
+    {
+      REP(j,N)
+	revisited[i][j] = 0;
+    }
   
   return true;
 }
@@ -106,6 +114,9 @@ bool readIn()
 //return false if can not reach
 bool goToCell(const ii &srcCell, const ii &dstCell)
 {
+
+  if(revisited[dstCell.first][dstCell.second] == 6000)
+    return false;
   
   //base case 1: road always closed
   if(!roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
@@ -116,8 +127,7 @@ bool goToCell(const ii &srcCell, const ii &dstCell)
 
   //base case 2: road always opened
   if(roadOpen[dstCell.first][dstCell.second] && roadTime[dstCell.first][dstCell.second] == 0)
-    {
-     
+    {      
       intvTime[dstCell.first][dstCell.second] = ii(tMin, tMax);
       return true;
     }
@@ -195,7 +205,7 @@ void BFS()
   //init the end point
   intvTime[N-1][N-1] = ii(-1, -1);
 
-  queue<ii> Q;
+  stack<ii> Q;
   //init the start point
   ii srcCell(0,0);
   if(roadOpen[0][0])
@@ -211,32 +221,42 @@ void BFS()
   int count = 0;
 
   Q.push(srcCell);
+  revisited[srcCell.first][srcCell.second]++;
   while(!Q.empty())
     {
-      if(count++ == 1000000)
+      if(count++ == 10000000)
 	{
 	  printf("over %d times", count);
 	  break;
 	} 
 
-      ii cur = Q.front(); Q.pop();
+      ii cur = Q.top(); Q.pop();
       //cout << "current cell is "; printCell(cur); printTime(cur);
       REP(i, 4)
 	{
 	  ii dstCell;
+	  if(neighborCell(cur, dx[i], dy[i], dstCell) && goToCell(cur, dstCell))
+	    {
+	      //cout << "one of goable neighbor cells is "; printCell(dstCell);
+	      Q.push(dstCell);
+	      revisited[dstCell.first][dstCell.second]++;
+	      //cout << "add this to stack "; printCell(dstCell); printTime(dstCell);
+	    }
+	  /*
 	  if(neighborCell(cur, dx[i], dy[i], dstCell))
 	    {
-	      //cout << "one of neighbor cells is "; printCell(dstCell);
+	      cout << "one of neighbor cells is "; printCell(dstCell);
 	      if(goToCell(cur, dstCell))
 		{
 		  Q.push(dstCell);
-	   	  //cout << "Can goToCell so add this neighbor cell to queue: "; printCell(dstCell); printTime(dstCell);		  
+		  revisited[dstCell.first][dstCell.second]--;
+	   	  cout << "Can goToCell so add this neighbor cell to queue: "; printCell(dstCell); printTime(dstCell);		  
 		}
 	      else
-		{
-		  //cout << "can not goToCell "; printCell(dstCell);
+	      {
+		cout << "can not goToCell "; printCell(dstCell);
 		}
-	    }
+		}*/
 	}
     }
    
