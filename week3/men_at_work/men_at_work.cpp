@@ -293,7 +293,7 @@ int main()
 
 
 
-  //TO DO: init tmin, tmax correctly
+  //TO DO: NEED an Array to keep track of maximum number of revisited time of a cell
 
 
 
