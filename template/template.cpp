@@ -4,6 +4,10 @@
 #include <queue>
 #include <string>
 #include <cassert>
+#include <stack>
+#include <deque>
+#include <set>
+
 
 using namespace std;
 

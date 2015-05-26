@@ -34,6 +34,7 @@ int order[SZ_AR];
 int nbRows, nbCols;
 char aRow[SZ_AR];
 
+//swap two collumns indexed colI and colJ
 void swapTask(int colI, int colJ)
 {
   REP(i, nbRows)
@@ -42,34 +43,48 @@ void swapTask(int colI, int colJ)
   swap(order[colI], order[colJ]);  
 }
 
-bool setCol(int current_col)
+//return true if we can fill the collumn indexed idx_col with collumn col
+//assumming that all collumns which are previous idx_col meet the condition consecutive ones 
+bool fillAble(int col, int idx_col)
 {
-  if(current_col == nbCols) 
+  //consider each row
+  for(int r = 0; r < nbRows; ++r)
+    {
+      //if the previous collumns contain 0, any col can be filled to the idx_col
+      //if previous collumns contain 1
+      if(mat[r][idx_col-1])
+	{
+	  //if col contains 1 it's ok but if it contains 0, than all other elements on the row r in from idx_col -> last have to be 0)
+	  if(mat[r][col] == false)
+	    {
+	      for(int others = idx_col; others < nbCols; ++others)
+		if(mat[r][others]) return false;
+	    }
+	}
+    }
+  return true;
+}
+
+bool setCol(int idx_colToFill)
+{
+  if(idx_colToFill == nbCols) 
     return true;
   
-  FOR(col, current_col, nbCols)
+  for(int col = idx_colToFill; col < nbCols; ++col)
     {
-      FOR(row, 0, nbRows)//check each row too see whether this could not be a solution
-	{
-	  if(mat[row][current_col - 1] && !mat[row][col]) //... 1 0 0 ...
-	    FOR(after, current_col, nbCols)
-	      {
-		if(mat[row][after]) // ... 1 0 0 ... 0 1 ...
-		  goto chooseNextCol;
-	      }
-	} 
       
-      //feasible, go for this setCol
-      swapTask(col, current_col);
-
-      if(setCol(current_col + 1))
-	 return true;
-
-      //go here i.e. this set above is not the solution
-      // --> swap back
-      swapTask(col, current_col);
-
-    chooseNextCol: {}
+      if(fillAble(col, idx_colToFill))
+	{
+	  //go for this setCol
+	  swapTask(col, idx_colToFill);
+	  
+	  if(setCol(idx_colToFill + 1))
+	    return true;
+	  
+	  //go here i.e. this set above is not the solution
+	  // --> swap back
+	  swapTask(col, idx_colToFill);
+	}
     }
   return false;
 }
@@ -101,12 +116,10 @@ int main()
   checkRead = scanf("%d", &nbCases);
   while(nbCases--)
     {      
-
-
       compute();     
       if(nbCases) printf("\n");
     }
-return 0;
+  return 0;
 }
 
  

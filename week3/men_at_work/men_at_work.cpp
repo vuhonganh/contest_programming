@@ -1,3 +1,7 @@
+//MAIN IDEA: can solve by BFS by considering 3-dimensions state (x,y,t) but this seems slow
+//I choose another way clearer to solve: at each time t maintain a 2D which represents reachable cells at time t. Keep counting the nb of new cells discovered along the way. After one period, if no new cell discovered -> no solution 
+
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -123,7 +127,8 @@ bool existStates()
     return false;
 }
 
-const int maxNoNew = 6000;
+const int maxNoNew = 5040; //period of configuration 
+//2520 = least common multiple of 1..9, double cause the state changes from open - close - open ...
 
 void compute()
 {
@@ -208,9 +213,9 @@ void doTask()
 
 }
 
-void genRandIn()
+void genRandIn(int t)
 {
-    srand (time(NULL));
+    srand (time(NULL) + t);
 
     int size = rand()%50 + 1;
 
@@ -241,8 +246,13 @@ void genRandIn()
 
 int main()
 {
-    doTask();
-    //genRandIn();
+  doTask();
+  /*
+  REP(i,5)
+    {
+      genRandIn(i*1024);
+      printf("\n");
+      }*/
     return 0;
 }
 
