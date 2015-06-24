@@ -1,8 +1,8 @@
 CC  = gcc
 CXX = g++
 LDLIBS = -lm
-CFLAGS = -O2 -std=c++11 -Wall
-CXXFLAGS = -O2 -std=c++11 -Wall
+CFLAGS = -O2 -std=c++11 -Wall -Wextra -pedantic -g
+CXXFLAGS = -O2 -std=c++11 -Wall -Wextra -pedantic -g
 
 #SRCS = $(wildcard *.cpp)
 #OBJS = (SRCS:.cpp=.o)

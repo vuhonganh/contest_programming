@@ -53,7 +53,7 @@ void inline turnLeft(int &x, int &y, int &id_dir)
     id_dir = leftDir[id_dir];
     x += dirX[id_dir];
     y += dirY[id_dir];
-    road[x][y] = true;
+    //road[x][y] = true;
 }
 
 void inline turnRight(int &x, int &y, int &id_dir)
@@ -61,7 +61,14 @@ void inline turnRight(int &x, int &y, int &id_dir)
     id_dir = rightDir[id_dir];
     x += dirX[id_dir];
     y += dirY[id_dir];
-    road[x][y] = true;
+    //road[x][y] = true;
+}
+
+void inline backWard(int &x, int &y, int &id_dir)
+{
+  id_dir = (id_dir < 2)? 1 - id_dir : 5 - id_dir;
+  x += dirX[id_dir];
+  y += dirY[id_dir];
 }
 
 int inline findLeftDir(const int &id_dir)
@@ -86,7 +93,7 @@ int inline findDir(int deltaX, int deltaY)
 
 bool inBound(const int &x, const int &y)
 {
-    return ( (0 <= x) && (x < nbCols) && (0 <= y) && (y < nbLines));
+    return ( (0 <= x) && (x < nbLines) && (0 <= y) && (y < nbCols));
 }
 
 void readIn()
@@ -145,26 +152,26 @@ void moveAroundContour(int &xContour, int &yContour, int &xOutside, int &yOutsid
          xContour += dirX[idxDir]; yContour += dirY[idxDir];
          xOutside += dirX[idxDir]; yOutside += dirY[idxDir];
     }
-    road[xContour][yContour] = true;
+    //road[xContour][yContour] = true;
 }
 
-bool getEntrance(ii &entrance, int &idDirEnter)
+bool getEntrance(ii &startPoint, ii &entrance, int &idDirEnter)
 {
-    //start point
-    int x = 0;
-    int y = nbCols/2;
+    //start point (nam tren cot giua cua ma tran)
+    int x = startPoint.first;
+    int y = startPoint.second;
 
     //start dir
     const int downDir = 0;
     const int upDir = 1;
     const int rightDir = 2;
     const int leftDir = 3;
-    road[x][y] = true;
+    //road[x][y] = true;
     while(mat[x][y])
     {        
         x += dirX[downDir];
-        y += dirY[downDir];        
-        road[x][y] = true;
+        y += dirY[downDir];
+        //road[x][y] = true;
     }
     int ox = x; int oy = y;
     //(x, y) now in contour
@@ -229,15 +236,26 @@ bool atYardCent(int x, int y)
 {
     REP(i,8)
     {
-        if(!mat[x + allDirX[i]][y + allDirY[i]])
+       if(!inBound(x + allDirX[i], y + allDirY[i]) || !mat[x + allDirX[i]][y + allDirY[i]])
             return false;
+      /* if(!inBound(x + allDirX[i], y + allDirY[i]))
+          printf("(%d, %d)", x + allDirX[i], y + allDirY[i]);
+
+      if(!mat[x + allDirX[i]][y + allDirY[i]])
+      {
+          return false;
+      }*/
+
     }
+    REP(i, 8)
+      road[x + allDirX[i]][y + allDirY[i]] = true;
+    road[x][y] = true;
     return true;
 }
 
-bool atYard(int &x, int &y, int &dir)
+bool atYard(const int &x, const int &y, const int &dir)
 {
-    if(leftPossible(x, y , dir) && forwardPossible(x, y, dir))
+  if(leftPossible(x, y , dir) && forwardPossible(x, y, dir))
     {
         int l = leftDir[dir];
         if(forwardPossible(x + dirX[l], y + dirY[l], dir))
@@ -252,50 +270,99 @@ bool atYard(int &x, int &y, int &dir)
     return false;
 }
 
+bool atYard2(int x, int y)
+{
+  if(mat[x-1][y]  && mat[x-1][y-1] && mat[x][y-1]) return true;
+  if(mat[x-1][y]  && mat[x-1][y+1] && mat[x][y+1]) return true;
+  if(mat[x+1][y]  && mat[x+1][y-1] && mat[x][y-1]) return true;
+  if(mat[x+1][y]  && mat[x+1][y+1] && mat[x][y+1]) return true;
+  return false;
+
+}
+
+bool findEntranceRobust(ii &resEntrance, int &resIdxDir)
+{
+    int nbStartPoints = 3*(nbLines/2);
+    vii listEntrance(nbStartPoints, ii(-1,-1));
+    vi listDirs(nbStartPoints, -1);
+    vector<bool> foundEntrance(nbStartPoints, false);
+
+    REP(i, nbStartPoints)
+    {
+        ii startPoint(i%(nbLines/3), (i%3)*nbCols/4 + nbCols/4);
+        foundEntrance[i] = (getEntrance(startPoint, listEntrance[i], listDirs[i]));
+    }
+    REP(i, nbStartPoints-1)
+    {
+        if(foundEntrance[i] && foundEntrance[i+1])
+        {
+            if(listEntrance[i].first == listEntrance[i+1].first && listEntrance[i].second == listEntrance[i+1].second)
+            {
+                resIdxDir   = listDirs[i];
+                resEntrance = listEntrance[i];
+                if(debug) printf("found entrance robust at ligne i = %d\n", i);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void solve()
 {
+    //ii startp(0, nbCols/2);
     ii entrance;
     int idxDir;
-    if(getEntrance(entrance, idxDir))
+    if(findEntranceRobust(entrance, idxDir))    
     {
         int x = entrance.first; int y = entrance.second;
+        if(debug) cout << "entrance = " << x << ", "<< y << endl;
         int ox = x; int oy = y;
         while(!atYard(x, y, idxDir))
         {
-            road[x][y] = true;
+	  //road[x][y] = true;
             if(leftPossible(x, y, idxDir))
             {
                 turnLeft(x, y, idxDir);
-                continue;
+                //continue;
             }
             else if(forwardPossible(x, y, idxDir))
             {
                 x += dirX[idxDir];
                 y += dirY[idxDir];
-                continue;
+                //continue;
             }
             else if(rightPossible(x, y, idxDir))
             {
                 turnRight(x, y, idxDir);
+		//continue;
             }
-            else
+	    else
+	      {
+		backWard(x, y, idxDir);
+	
+	      }
+            /*else
             {
+                if(debug) printMat(ox, oy, x, y);
                 printf("NO\n");
                 return;
-            }
+		}*/
             if(ox == x && oy == y)
             {
+	      if(debug) printMat(ox, oy, x, y);
                 printf("NO\n");
                 return;
             }
         }
-        //printMat(ox, oy, x, y);
+        if(debug) printMat(ox, oy, x, y);
         printf("YES\n");
         return;
     }
     else
     {
-        printf("no entrance found --> STH WRONG\n");
+        printf("NO\n");
+        //printf("no entrance found --> STH WRONG\n");
     }
 }
 
@@ -306,6 +373,7 @@ int main()
     while(nbCases--)
     {
         readIn();
+        //cout << "done readIN\n";
         solve();
 //        ii entrance;
 //        int idxDirEnter;
